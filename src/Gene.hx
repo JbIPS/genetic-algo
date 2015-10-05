@@ -81,9 +81,18 @@ class Gene {
       case TOP: if(Map.getObstruction(Math.round(creature.x), Math.round(creature.y+1)) == 0) creature.y++;
       case BOTTOM: if(Map.getObstruction(Math.round(creature.x), Math.round(creature.y-1)) == 0) creature.y--;
       case GOTO(value): gotoIdx = value;
-      case GT(property1, property2): if(gene.getValueOf(creature, property1) <= gene.getValueOf(creature, property2)) gotoIdx++;
-      case LT(property1, property2): if(gene.getValueOf(creature, property1) >= gene.getValueOf(creature, property2)) gotoIdx++;
+    case GT(property1, property2): if(gene.getValueOf(creature, property1) <= gene.getValueOf(creature, property2)){
+        // trace('GT OK, next');
+        gotoIdx++;
+      }
+      // else trace('Fail, do nothing');
+    case LT(property1, property2): if(gene.getValueOf(creature, property1) >= gene.getValueOf(creature, property2)){
+        // trace('LT OK, next');
+        gotoIdx++;
+      }
+      // else trace('Fail, do nothing');
     }
+    // trace('Going to '+gotoIdx);
     return gotoIdx;
   }
   public function toString(): String {

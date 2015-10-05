@@ -3,10 +3,10 @@ class Creature {
   public static inline var MUTATION_PROBA_PERCENT: Int = 5;
   private static var nextId = 0;
   private var genome: Array<Gene>;
-  public var x: Float;
-  public var y: Float;
-  public var initialX: Float;
-  public var initialY: Float;
+  public var x: Int;
+  public var y: Int;
+  public var initialX: Int;
+  public var initialY: Int;
   public var id: Int;
   public var currentGeneIdx: Int = 0;
 
@@ -40,13 +40,16 @@ class Creature {
     reset();
   }
   public function reset() {
-    x = (Map.WIDTH / 2) + (5 - Math.random() * 10);
-    y = (Map.HEIGHT / 2) + (5 - Math.random() * 10);
+    x = Math.round((Map.WIDTH / 2));
+    y = Math.round((Map.HEIGHT / 2));
+    // x = Math.round((Map.WIDTH / 2) + (5 - Math.random() * 10));
+    // y = Math.round((Map.HEIGHT / 2) + (5 - Math.random() * 10));
     initialX = x;
     initialY = y;
   }
   public function loop() {
     if(currentGeneIdx < NUM_GENES) {
+      // trace('Executing num '+currentGeneIdx+': '+genome[currentGeneIdx]);
       currentGeneIdx = Gene.exec(this, genome[currentGeneIdx]);
 /*
       var gene = Gene.randomize();

@@ -6,11 +6,18 @@ typedef CreatureData = {
   maxY: Float,
   maxDist: Float,
   map: Array<Array<Int>>,
+  turnOfArrival: Int
 }
 typedef Coord<T> = { var x:T; var y:T; }
 class Teacher {
   public static inline var MAX_TURNS:Int = 200;
-  public var turns:Int = 0;
+  // Fitness params
+  public static inline var BONUS_ARRIVAL:Int = 2000;
+  public static inline var BONUS_NEW_CASE:Int = 1;
+  public static inline var BONUS_NEW_HORIZON:Int = 2;
+  public static inline var BONUS_MAX_DISTANCE:Int = 5;
+
+  var turns:Int = 0;
   private var creaturesData:Array<CreatureData> = null;
 
   public function new(creatures: Array<Creature>) {
@@ -24,6 +31,7 @@ class Teacher {
         maxY: 0,
         maxDist: 0,
         map: createMap(),
+        turnOfArrival: MAX_TURNS
       }
     }
   }
@@ -45,6 +53,7 @@ class Teacher {
     turns ++;
   }
   public function loop(creature:Creature) {
+    // trace('Turn '+turns);
     if(turns == 0) {
       creaturesData[creature.id].map = createMap();
       creaturesData[creature.id].minX= 0;
@@ -56,31 +65,41 @@ class Teacher {
     }
     // reached target
     if(creature.x <= 0 && creature.y < (Map.HEIGHT/2)+5 && creature.y > (Map.HEIGHT/2)-5) {
-      creaturesData[creature.id].score += 40;
+      creaturesData[creature.id].score += BONUS_ARRIVAL;
+      creaturesData[creature.id].turnOfArrival = turns;
+      // trace('Creature '+creature.id+' arrived!');
     }
     // gone to a new coord
-    if(creaturesData[creature.id].map[Math.round(creature.x)][Math.round(creature.y)] == 0) {
-      creaturesData[creature.id].score += 1;
+    if(creaturesData[creature.id].map[creature.x][creature.y] == 0) {
+      creaturesData[creature.id].score += BONUS_NEW_CASE;
+      // trace('Creature '+creature.id+' discovered '+creature.x+';'+creature.y);
     }
-    creaturesData[creature.id].map[Math.round(creature.x)][Math.round(creature.y)]++;
+    creaturesData[creature.id].map[creature.x][creature.y]++;
     // gone out of the "known" perimeter
     if(creaturesData[creature.id].minX > creature.x || creaturesData[creature.id].maxX < creature.x ||
         creaturesData[creature.id].minY > creature.y || creaturesData[creature.id].maxY < creature.y) {
-      creaturesData[creature.id].score += 0;
+      creaturesData[creature.id].score += BONUS_NEW_HORIZON;
+      // trace('Creature '+creature.id+' went to new horizon!'+creature.x+';'+creature.y);
     }
     creaturesData[creature.id].minX = Math.min(creature.x, creaturesData[creature.id].minX);
     creaturesData[creature.id].minY = Math.min(creature.y, creaturesData[creature.id].minY);
     creaturesData[creature.id].maxX = Math.max(creature.x, creaturesData[creature.id].maxX);
     creaturesData[creature.id].maxY = Math.max(creature.y, creaturesData[creature.id].maxY);
     // gone further
-    var dist = Math.abs(creature.x - creature.initialX) + Math.abs(creature.y - creature.initialY);
-    if(dist > creaturesData[creature.id].maxDist) {
-      creaturesData[creature.id].maxDist = dist;
-      creaturesData[creature.id].score += 0;
-    }
+    // var dist = Math.abs(creature.x - creature.initialX) + Math.abs(creature.y - creature.initialY);
+    // if(dist > creaturesData[creature.id].maxDist) {
+    //   creaturesData[creature.id].maxDist = dist;
+    //   creaturesData[creature.id].score += BONUS_MAX_DISTANCE;
+    //   // trace('Creature '+creature.id+' went the farest: '+dist);
+    // }
+    // Closer to the goal
+    creaturesData[creature.id].score -= Math.round(getDistance(creature)/5);
+
+    // trace('Turn score: '+creaturesData[creature.id].score);
   }
   public function getScore(creature:Creature):Int {
-    return creaturesData[creature.id].score;
+    // Sanction too much steps
+    return creaturesData[creature.id].score - creaturesData[creature.id].turnOfArrival;
   }
   public function getRoute(creature:Creature): String {
     var res = new Array();
@@ -114,5 +133,10 @@ class Teacher {
   public function isOver():Bool {
     return turns >= MAX_TURNS;
   }
-}
 
+  private function getDistance(c: Creature) : Float
+  {
+    return c.x + Math.abs(c.y - Map.HEIGHT/2);
+  }
+
+}
